@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchUserDataFromFirebase } from './firebaseUtils';
 
 const ProfileCompletion = () => {
     const navigate = useNavigate();
@@ -9,16 +10,31 @@ const ProfileCompletion = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState('');
     const [user, setUser] = useState(null);
+    const [fetchingData, setFetchingData] = useState(true);
 
     useEffect(() => {
-        // Get user data from localStorage
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-            setFullName(parsedUser.fullName || '');
-            setProfilePhotoUrl(parsedUser.profilePhotoUrl || '');
-        }
+        // Fetch user data from Firebase first
+        const loadUserData = async () => {
+            const firebaseUser = await fetchUserDataFromFirebase();
+
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                setFullName(firebaseUser.fullName || '');
+                setProfilePhotoUrl(firebaseUser.profilePhotoUrl || '');
+            } else {
+                // Fallback to localStorage if Firebase fetch fails
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsedUser = JSON.parse(userData);
+                    setUser(parsedUser);
+                    setFullName(parsedUser.fullName || '');
+                    setProfilePhotoUrl(parsedUser.profilePhotoUrl || '');
+                }
+            }
+            setFetchingData(false);
+        };
+
+        loadUserData();
     }, []);
 
     const handleSubmit = async (e) => {
@@ -114,45 +130,51 @@ const ProfileCompletion = () => {
                     {success && <div className="success-message">{success}</div>}
                     {error && <div className="error-message">{error}</div>}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="fullName">
-                                    <span className="icon">👤</span> Full Name:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="fullName"
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    placeholder="Enter your full name"
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="profilePhoto">
-                                    <span className="icon">🌐</span> Profile Photo URL
-                                </label>
-                                <input
-                                    type="url"
-                                    id="profilePhoto"
-                                    value={profilePhotoUrl}
-                                    onChange={(e) => setProfilePhotoUrl(e.target.value)}
-                                    placeholder="Enter your profile photo URL"
-                                    required
-                                />
-                            </div>
+                    {fetchingData ? (
+                        <div className="loading-text" style={{ padding: '2rem', textAlign: 'center' }}>
+                            Loading your profile data...
                         </div>
+                    ) : (
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="fullName">
+                                        <span className="icon">👤</span> Full Name:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="fullName"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        placeholder="Enter your full name"
+                                        required
+                                    />
+                                </div>
 
-                        <button
-                            type="submit"
-                            className="btn-update"
-                            disabled={loading}
-                        >
-                            {loading ? 'Updating...' : 'Update'}
-                        </button>
-                    </form>
+                                <div className="form-group">
+                                    <label htmlFor="profilePhoto">
+                                        <span className="icon">🌐</span> Profile Photo URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        id="profilePhoto"
+                                        value={profilePhotoUrl}
+                                        onChange={(e) => setProfilePhotoUrl(e.target.value)}
+                                        placeholder="Enter your profile photo URL"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="btn-update"
+                                disabled={loading}
+                            >
+                                {loading ? 'Updating...' : 'Update'}
+                            </button>
+                        </form>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchUserDataFromFirebase } from './firebaseUtils';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [profileCompletion, setProfileCompletion] = useState(0);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get user data from localStorage
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-            calculateProfileCompletion(parsedUser);
-        }
+        // Fetch user data from Firebase first
+        const loadUserData = async () => {
+            const firebaseUser = await fetchUserDataFromFirebase();
+
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                calculateProfileCompletion(firebaseUser);
+            } else {
+                // Fallback to localStorage if Firebase fetch fails
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsedUser = JSON.parse(userData);
+                    setUser(parsedUser);
+                    calculateProfileCompletion(parsedUser);
+                }
+            }
+            setLoading(false);
+        };
+
+        loadUserData();
     }, []);
 
     const calculateProfileCompletion = (userData) => {
@@ -58,7 +73,9 @@ const Dashboard = () => {
 
             <div className="dashboard-content">
                 <div className="profile-section">
-                    {user && (
+                    {loading ? (
+                        <p className="loading-text">Loading your profile...</p>
+                    ) : user ? (
                         <>
                             <h2>Your Profile</h2>
                             <p><strong>Email:</strong> {user.email}</p>
@@ -76,6 +93,8 @@ const Dashboard = () => {
                                 </button>
                             )}
                         </>
+                    ) : (
+                        <p className="error-text">Unable to load profile. Please try logging in again.</p>
                     )}
                 </div>
             </div>
