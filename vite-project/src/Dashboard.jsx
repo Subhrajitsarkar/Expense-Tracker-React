@@ -76,7 +76,12 @@ const Dashboard = () => {
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
-                <h1>Welcome to Expense Tracker!!!</h1>
+                <div className="header-top">
+                    <h1>Welcome to Expense Tracker!!!</h1>
+                    <button className="btn-logout" onClick={handleLogout}>
+                        Logout
+                    </button>
+                </div>
                 {profileCompletion < 100 && (
                     <div className="profile-incomplete-banner">
                         <span className="banner-text">
@@ -149,10 +154,6 @@ const Dashboard = () => {
                     </div>
                 )}
             </div>
-
-            <button className="btn-logout" onClick={handleLogout}>
-                Logout
-            </button>
         </div>
     );
 };
