@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserDataFromFirebase, sendVerificationEmail } from './firebaseUtils';
+import AddExpense from './AddExpense';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -153,6 +154,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 )}
+
+                <AddExpense />
             </div>
         </div>
     );
