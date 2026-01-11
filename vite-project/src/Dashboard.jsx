@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchUserDataFromFirebase } from './firebaseUtils';
+import { fetchUserDataFromFirebase, sendVerificationEmail } from './firebaseUtils';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [profileCompletion, setProfileCompletion] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [emailVerified, setEmailVerified] = useState(false);
+    const [verificationLoading, setVerificationLoading] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState('');
+    const [verificationError, setVerificationError] = useState('');
 
     useEffect(() => {
         // Fetch user data from Firebase first
@@ -15,6 +19,7 @@ const Dashboard = () => {
 
             if (firebaseUser) {
                 setUser(firebaseUser);
+                setEmailVerified(firebaseUser.emailVerified || false);
                 calculateProfileCompletion(firebaseUser);
             } else {
                 // Fallback to localStorage if Firebase fetch fails
@@ -22,6 +27,7 @@ const Dashboard = () => {
                 if (userData) {
                     const parsedUser = JSON.parse(userData);
                     setUser(parsedUser);
+                    setEmailVerified(parsedUser.emailVerified || false);
                     calculateProfileCompletion(parsedUser);
                 }
             }
@@ -44,6 +50,21 @@ const Dashboard = () => {
 
     const handleCompleteProfile = () => {
         navigate('/complete-profile');
+    };
+
+    const handleSendVerificationEmail = async () => {
+        setVerificationMessage('');
+        setVerificationError('');
+        setVerificationLoading(true);
+
+        try {
+            const result = await sendVerificationEmail();
+            setVerificationMessage(result.message);
+        } catch (err) {
+            setVerificationError(err.message || 'Failed to send verification email');
+        } finally {
+            setVerificationLoading(false);
+        }
     };
 
     const handleLogout = () => {
@@ -97,6 +118,36 @@ const Dashboard = () => {
                         <p className="error-text">Unable to load profile. Please try logging in again.</p>
                     )}
                 </div>
+
+                {!emailVerified && (
+                    <div className="email-verification-section">
+                        <div className="verification-banner">
+                            <div className="verification-content">
+                                <h3>Email Verification Required</h3>
+                                <p>
+                                    Please verify your email address to secure your account and enable password recovery.
+                                </p>
+                                {verificationMessage && (
+                                    <div className="success-message">
+                                        ✓ {verificationMessage}
+                                    </div>
+                                )}
+                                {verificationError && (
+                                    <div className="error-message">
+                                        ✗ {verificationError}
+                                    </div>
+                                )}
+                                <button
+                                    className="btn-verify-email"
+                                    onClick={handleSendVerificationEmail}
+                                    disabled={verificationLoading}
+                                >
+                                    {verificationLoading ? 'Sending...' : 'Verify Email'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <button className="btn-logout" onClick={handleLogout}>
