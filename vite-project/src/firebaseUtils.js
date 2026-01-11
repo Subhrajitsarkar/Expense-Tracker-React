@@ -243,9 +243,35 @@ export const deleteExpenseFromFirebase = async (userId, expenseId) => {
             throw new Error(data?.error?.message || 'Failed to delete expense');
         }
 
+        console.log('Expense successfully deleted');
         return true;
     } catch (err) {
         console.error('Error deleting expense from Firebase:', err);
+        throw err;
+    }
+};
+
+export const updateExpenseInFirebase = async (userId, expenseId, updatedExpense) => {
+    try {
+        const token = localStorage.getItem('firebaseToken');
+        if (!userId || !token) throw new Error('Not authenticated');
+
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${token}`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedExpense),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error?.message || 'Failed to update expense');
+        }
+
+        console.log('Expense successfully updated');
+        return { id: expenseId, ...data };
+    } catch (err) {
+        console.error('Error updating expense in Firebase:', err);
         throw err;
     }
 };

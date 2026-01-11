@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase } from './firebaseUtils';
+import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase, updateExpenseInFirebase } from './firebaseUtils';
 
 const AddExpense = () => {
     const [amount, setAmount] = useState('');
@@ -7,6 +7,13 @@ const AddExpense = () => {
     const [category, setCategory] = useState('Food');
     const [expenses, setExpenses] = useState([]);
     const [error, setError] = useState('');
+    const [fetchLoading, setFetchLoading] = useState(false);
+    const [addLoading, setAddLoading] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [editAmount, setEditAmount] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editCategory, setEditCategory] = useState('Food');
+    const [editLoading, setEditLoading] = useState(false);
 
     const expenseCategories = [
         'Food',
@@ -20,9 +27,6 @@ const AddExpense = () => {
         'Education',
         'Other'
     ];
-
-    const [fetchLoading, setFetchLoading] = useState(false);
-    const [addLoading, setAddLoading] = useState(false);
 
     // Load expenses from Firebase on component mount
     useEffect(() => {
@@ -128,6 +132,73 @@ const AddExpense = () => {
             console.error('Failed to delete expense:', err);
             setError(err.message || 'Failed to delete expense');
         }
+    };
+
+    const handleEditClick = (expense) => {
+        setEditingId(expense.id);
+        setEditAmount(expense.amount.toString());
+        setEditDescription(expense.description);
+        setEditCategory(expense.category);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!editAmount || isNaN(editAmount) || parseFloat(editAmount) <= 0) {
+            setError('Please enter a valid amount greater than 0');
+            return;
+        }
+
+        if (!editDescription.trim()) {
+            setError('Please enter a description');
+            return;
+        }
+
+        const updatedExpense = {
+            amount: parseFloat(editAmount),
+            description: editDescription.trim(),
+            category: editCategory,
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+            timestamp: Date.now(),
+        };
+
+        setEditLoading(true);
+        try {
+            const userDataRaw = localStorage.getItem('userData');
+            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
+
+            if (userData && userData.userId && editingId) {
+                await updateExpenseInFirebase(userData.userId, editingId, updatedExpense);
+
+                // Update the expense in the list
+                setExpenses(prev =>
+                    prev.map(exp =>
+                        exp.id === editingId ? { id: editingId, ...updatedExpense } : exp
+                    )
+                );
+            }
+
+            // Close edit modal
+            setEditingId(null);
+            setEditAmount('');
+            setEditDescription('');
+            setEditCategory('Food');
+        } catch (err) {
+            console.error('Failed to update expense:', err);
+            setError(err.message || 'Failed to update expense');
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
+    const handleEditCancel = () => {
+        setEditingId(null);
+        setEditAmount('');
+        setEditDescription('');
+        setEditCategory('Food');
+        setError('');
     };
 
     const getTotalExpenses = () => {
@@ -237,13 +308,22 @@ const AddExpense = () => {
                                     </div>
                                     <div className="expense-amount">
                                         <span className="amount">₹{expense.amount.toFixed(2)}</span>
-                                        <button
-                                            className="btn-delete-expense"
-                                            onClick={() => handleDeleteExpense(expense.id)}
-                                            title="Delete expense"
-                                        >
-                                            ✕
-                                        </button>
+                                        <div className="expense-actions">
+                                            <button
+                                                className="btn-edit-expense"
+                                                onClick={() => handleEditClick(expense)}
+                                                title="Edit expense"
+                                            >
+                                                ✎
+                                            </button>
+                                            <button
+                                                className="btn-delete-expense"
+                                                onClick={() => handleDeleteExpense(expense.id)}
+                                                title="Delete expense"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -269,6 +349,74 @@ const AddExpense = () => {
             {expenses.length === 0 && (
                 <div className="no-expenses">
                     <p>No expenses added yet. Add your first expense above!</p>
+                </div>
+            )}
+
+            {editingId && (
+                <div className="edit-modal-overlay">
+                    <div className="edit-modal">
+                        <h2>Edit Expense</h2>
+                        <form onSubmit={handleEditSubmit} className="edit-form">
+                            <div className="form-group">
+                                <label htmlFor="edit-amount">Amount Spent (₹)</label>
+                                <input
+                                    type="number"
+                                    id="edit-amount"
+                                    placeholder="Enter amount"
+                                    value={editAmount}
+                                    onChange={(e) => setEditAmount(e.target.value)}
+                                    step="0.01"
+                                    min="0"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="edit-description">Description</label>
+                                <input
+                                    type="text"
+                                    id="edit-description"
+                                    placeholder="What did you spend on?"
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="edit-category">Category</label>
+                                <select
+                                    id="edit-category"
+                                    value={editCategory}
+                                    onChange={(e) => setEditCategory(e.target.value)}
+                                >
+                                    {expenseCategories.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                            {cat}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {error && <p className="error-message">{error}</p>}
+
+                            <div className="modal-buttons">
+                                <button
+                                    type="submit"
+                                    className="btn-submit-edit"
+                                    disabled={editLoading}
+                                >
+                                    {editLoading ? 'Updating...' : 'Update Expense'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-cancel-edit"
+                                    onClick={handleEditCancel}
+                                    disabled={editLoading}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
         </div>
