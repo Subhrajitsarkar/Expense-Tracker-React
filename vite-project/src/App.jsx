@@ -1,13 +1,31 @@
+// The user needs to install react-router-dom by running: npm install react-router-dom
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './SignUp';
+import Login from './Login';
+import Welcome from './Welcome';
 import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('firebaseToken'));
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
   return (
-    <div className="App">
-      <main>
-        <SignUp />
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="App">
+        <main>
+          <Routes>
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+            <Route path="/welcome" element={isAuthenticated ? <Welcome /> : <Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 

@@ -1,24 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const SignUp = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const isFormValid = email && password && confirmPassword && password === confirmPassword;
+  const isFormValid = email && password;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (password !== confirmPassword) {
-      return setError('Passwords do not match');
-    }
-
     setLoading(true);
 
     const apiKey = import.meta.env.VITE_API_KEY;
@@ -29,7 +23,7 @@ const SignUp = () => {
     }
 
     try {
-      const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+      const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`, {
         method: 'POST',
         body: JSON.stringify({
           email: email,
@@ -48,18 +42,15 @@ const SignUp = () => {
         throw new Error(errorMessage);
       }
 
-      console.log('User has successfully signed up', data);
-      alert('Successfully signed up!');
-      navigate('/login');
+      console.log('User has successfully logged in', data);
+      localStorage.setItem('firebaseToken', data.idToken);
+      navigate('/welcome');
 
     } catch (err) {
-      console.error('Signup Error:', err);
-      // Map common Firebase error messages to more user-friendly ones
-      let userFriendlyError = 'Signup failed. Please try again.';
-      if (err.message.includes('EMAIL_EXISTS')) {
-        userFriendlyError = 'This email address is already in use.';
-      } else if (err.message.includes('WEAK_PASSWORD')) {
-        userFriendlyError = 'The password is too weak. It must be at least 6 characters long.';
+      console.error('Login Error:', err);
+      let userFriendlyError = 'Login failed. Please check your credentials.';
+      if (err.message.includes('INVALID_PASSWORD') || err.message.includes('EMAIL_NOT_FOUND')) {
+        userFriendlyError = 'Invalid email or password.';
       }
       setError(userFriendlyError);
     } finally {
@@ -85,7 +76,7 @@ const SignUp = () => {
 
         <div className="form-container">
           <div className="form-card">
-            <h2>SignUp</h2>
+            <h2>Login</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <input
@@ -107,23 +98,13 @@ const SignUp = () => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <input
-                  type="password"
-                  id="confirm-password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
               {error && <p className="error-message">{error}</p>}
               <button type="submit" className="btn-signup" disabled={!isFormValid || loading}>
-                {loading ? 'Signing Up...' : 'Sign up'}
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
-            <Link to="/login" className="btn-login">
-              Have an account? Login
+            <Link to="/signup" className="btn-login">
+              Don't have an account? Sign up
             </Link>
           </div>
         </div>
@@ -132,4 +113,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Login;
