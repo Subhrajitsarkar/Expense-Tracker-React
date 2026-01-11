@@ -115,3 +115,64 @@ export const sendVerificationEmail = async () => {
     }
 };
 
+export const sendPasswordResetEmail = async (email) => {
+    try {
+        const apiKey = import.meta.env.VITE_API_KEY;
+
+        if (!apiKey) {
+            throw new Error('Firebase API Key is not configured');
+        }
+
+        if (!email) {
+            throw new Error('Email is required');
+        }
+
+        // Call Firebase REST API to send password reset email
+        const response = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    requestType: 'PASSWORD_RESET',
+                    email: email.trim(),
+                }),
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errorCode = data.error?.code;
+            const errorMessage = data.error?.message;
+
+            // Handle specific Firebase error codes
+            let userFriendlyError = 'Failed to send password reset email. Please try again.';
+
+            if (errorCode === 'EMAIL_NOT_FOUND') {
+                userFriendlyError = 'No account found with this email address.';
+            } else if (errorCode === 'INVALID_EMAIL') {
+                userFriendlyError = 'Please enter a valid email address.';
+            } else if (errorCode === 'USER_DISABLED') {
+                userFriendlyError = 'This account has been disabled. Please contact support.';
+            } else if (errorCode === 'TOO_MANY_ATTEMPTS_TRY_LATER') {
+                userFriendlyError = 'Too many attempts. Please try again later.';
+            } else if (errorCode === 'OPERATION_NOT_ALLOWED') {
+                userFriendlyError = 'Password reset is not enabled for this account.';
+            }
+
+            throw new Error(userFriendlyError);
+        }
+
+        return {
+            success: true,
+            message: 'Password reset email sent successfully! Check your email for the password reset link.',
+        };
+    } catch (err) {
+        console.error('Error sending password reset email:', err);
+        throw err;
+    }
+};
+

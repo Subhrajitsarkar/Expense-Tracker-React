@@ -113,6 +113,9 @@ const Login = () => {
                 {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
+            <Link to="/forgot-password" className="btn-forgot-password">
+              Forgot Password?
+            </Link>
             <Link to="/signup" className="btn-login">
               Don't have an account? Sign up
             </Link>
