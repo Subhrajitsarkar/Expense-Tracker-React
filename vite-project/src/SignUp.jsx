@@ -49,8 +49,19 @@ const SignUp = () => {
       }
 
       console.log('User has successfully signed up', data);
+
+      // Store user data in localStorage
+      const userData = {
+        email: data.email,
+        userId: data.localId,
+        fullName: '',
+        profilePhotoUrl: '',
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('firebaseToken', data.idToken);
+
       alert('Successfully signed up!');
-      navigate('/login');
+      navigate('/dashboard');
 
     } catch (err) {
       console.error('Signup Error:', err);

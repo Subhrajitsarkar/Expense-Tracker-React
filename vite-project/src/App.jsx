@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './SignUp';
 import Login from './Login';
 import Welcome from './Welcome';
+import Dashboard from './Dashboard';
+import ProfileCompletion from './ProfileCompletion';
 import './App.css';
 
 function App() {
@@ -21,7 +23,9 @@ function App() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
             <Route path="/welcome" element={isAuthenticated ? <Welcome /> : <Navigate to="/login" />} />
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/complete-profile" element={isAuthenticated ? <ProfileCompletion /> : <Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
         </main>
       </div>

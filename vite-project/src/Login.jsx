@@ -44,7 +44,17 @@ const Login = () => {
 
       console.log('User has successfully logged in', data);
       localStorage.setItem('firebaseToken', data.idToken);
-      navigate('/welcome');
+
+      // Store user data in localStorage
+      const userData = {
+        email: data.email,
+        userId: data.localId,
+        fullName: data.displayName || '',
+        profilePhotoUrl: data.photoUrl || '',
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
+
+      navigate('/dashboard');
 
     } catch (err) {
       console.error('Login Error:', err);
