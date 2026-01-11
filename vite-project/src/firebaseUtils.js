@@ -176,3 +176,77 @@ export const sendPasswordResetEmail = async (email) => {
     }
 };
 
+// Realtime Database helpers
+const FIREBASE_DB_URL = import.meta.env.VITE_FIREBASE_DB_URL || 'https://authentication-app-d8725-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+export const addExpenseToFirebase = async (userId, expense) => {
+    try {
+        const token = localStorage.getItem('firebaseToken');
+        if (!userId || !token) throw new Error('Not authenticated');
+
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${token}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(expense),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error?.message || 'Failed to add expense');
+        }
+
+        // Firebase returns { name: 'generatedId' }
+        return { ...expense, id: data.name };
+    } catch (err) {
+        console.error('Error adding expense to Firebase:', err);
+        throw err;
+    }
+};
+
+export const fetchExpensesFromFirebase = async (userId) => {
+    try {
+        const token = localStorage.getItem('firebaseToken');
+        if (!userId || !token) return [];
+
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${token}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Failed to fetch expenses:', data?.error || data);
+            return [];
+        }
+
+        if (!data) return [];
+
+        const items = Object.keys(data).map((key) => ({ id: key, ...data[key] }));
+
+        // Sort by id/key (most recent first if keys are push ids)
+        items.sort((a, b) => (a.id < b.id ? 1 : -1));
+        return items;
+    } catch (err) {
+        console.error('Error fetching expenses from Firebase:', err);
+        return [];
+    }
+};
+
+export const deleteExpenseFromFirebase = async (userId, expenseId) => {
+    try {
+        const token = localStorage.getItem('firebaseToken');
+        if (!userId || !token) throw new Error('Not authenticated');
+
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${token}`;
+        const response = await fetch(url, { method: 'DELETE' });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data?.error?.message || 'Failed to delete expense');
+        }
+
+        return true;
+    } catch (err) {
+        console.error('Error deleting expense from Firebase:', err);
+        throw err;
+    }
+};
+

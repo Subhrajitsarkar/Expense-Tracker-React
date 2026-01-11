@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase } from './firebaseUtils';
 
 const AddExpense = () => {
     const [amount, setAmount] = useState('');
@@ -20,21 +21,46 @@ const AddExpense = () => {
         'Other'
     ];
 
-    // Load expenses from localStorage on component mount
+    const [fetchLoading, setFetchLoading] = useState(false);
+    const [addLoading, setAddLoading] = useState(false);
+
+    // Load expenses from Firebase on component mount
     useEffect(() => {
-        const savedExpenses = localStorage.getItem('userExpenses');
-        if (savedExpenses) {
+        const load = async () => {
+            setFetchLoading(true);
             try {
-                setExpenses(JSON.parse(savedExpenses));
+                const userDataRaw = localStorage.getItem('userData');
+                const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
+                if (!userData || !userData.userId) {
+                    // No user id available, fallback to localStorage key
+                    const savedExpenses = localStorage.getItem('userExpenses');
+                    if (savedExpenses) {
+                        setExpenses(JSON.parse(savedExpenses));
+                    }
+                    return;
+                }
+
+                const items = await fetchExpensesFromFirebase(userData.userId);
+                if (items && items.length) {
+                    setExpenses(items.map(it => ({
+                        ...it,
+                        // ensure numeric amount
+                        amount: typeof it.amount === 'number' ? it.amount : parseFloat(it.amount || 0)
+                    })));
+                }
             } catch (err) {
-                console.error('Error loading expenses:', err);
+                console.error('Failed to load expenses:', err);
+            } finally {
+                setFetchLoading(false);
             }
-        }
+        };
+
+        load();
     }, []);
 
     const isFormValid = amount && description.trim() && category;
 
-    const handleAddExpense = (e) => {
+    const handleAddExpense = async (e) => {
         e.preventDefault();
         setError('');
 
@@ -49,30 +75,59 @@ const AddExpense = () => {
         }
 
         const newExpense = {
-            id: Date.now(),
             amount: parseFloat(amount),
             description: description.trim(),
             category: category,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
+            timestamp: Date.now(),
         };
 
-        const updatedExpenses = [newExpense, ...expenses];
-        setExpenses(updatedExpenses);
+        setAddLoading(true);
+        try {
+            const userDataRaw = localStorage.getItem('userData');
+            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
 
-        // Save to localStorage
-        localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
+            if (userData && userData.userId) {
+                const saved = await addExpenseToFirebase(userData.userId, newExpense);
+                setExpenses(prev => [saved, ...prev]);
+            } else {
+                // fallback to localStorage if not authenticated
+                const temp = { id: Date.now().toString(), ...newExpense };
+                const updatedExpenses = [temp, ...expenses];
+                setExpenses(updatedExpenses);
+                localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
+            }
 
-        // Reset form
-        setAmount('');
-        setDescription('');
-        setCategory('Food');
+            // Reset form
+            setAmount('');
+            setDescription('');
+            setCategory('Food');
+        } catch (err) {
+            console.error('Failed to add expense:', err);
+            setError(err.message || 'Failed to add expense');
+        } finally {
+            setAddLoading(false);
+        }
     };
 
-    const handleDeleteExpense = (id) => {
-        const updatedExpenses = expenses.filter(expense => expense.id !== id);
-        setExpenses(updatedExpenses);
-        localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
+    const handleDeleteExpense = async (id) => {
+        try {
+            const userDataRaw = localStorage.getItem('userData');
+            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
+
+            if (userData && userData.userId && id) {
+                await deleteExpenseFromFirebase(userData.userId, id);
+            }
+
+            const updatedExpenses = expenses.filter(expense => expense.id !== id);
+            setExpenses(updatedExpenses);
+            // keep localStorage in sync
+            localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
+        } catch (err) {
+            console.error('Failed to delete expense:', err);
+            setError(err.message || 'Failed to delete expense');
+        }
     };
 
     const getTotalExpenses = () => {
@@ -138,14 +193,16 @@ const AddExpense = () => {
                     <button
                         type="submit"
                         className="btn-add-expense"
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || addLoading}
                     >
-                        Add Expense
+                        {addLoading ? 'Adding...' : 'Add Expense'}
                     </button>
                 </form>
             </div>
 
-            {expenses.length > 0 && (
+            {fetchLoading ? (
+                <div className="loading-text" style={{ padding: '1rem' }}>Loading expenses...</div>
+            ) : expenses.length > 0 && (
                 <div className="expenses-display-container">
                     <div className="expenses-summary">
                         <h3>Expense Summary</h3>
