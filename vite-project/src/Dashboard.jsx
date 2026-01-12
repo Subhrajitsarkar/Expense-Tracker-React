@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserDataFromFirebase, sendVerificationEmail } from './firebaseUtils';
+import { useAuth } from './context/AuthContext';
 import AddExpense from './AddExpense';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const { user, logout, updateUser } = useAuth();
     const [profileCompletion, setProfileCompletion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [emailVerified, setEmailVerified] = useState(false);
@@ -16,27 +17,26 @@ const Dashboard = () => {
     useEffect(() => {
         // Fetch user data from Firebase first
         const loadUserData = async () => {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+
             const firebaseUser = await fetchUserDataFromFirebase();
 
             if (firebaseUser) {
-                setUser(firebaseUser);
+                updateUser(firebaseUser);
                 setEmailVerified(firebaseUser.emailVerified || false);
                 calculateProfileCompletion(firebaseUser);
             } else {
-                // Fallback to localStorage if Firebase fetch fails
-                const userData = localStorage.getItem('userData');
-                if (userData) {
-                    const parsedUser = JSON.parse(userData);
-                    setUser(parsedUser);
-                    setEmailVerified(parsedUser.emailVerified || false);
-                    calculateProfileCompletion(parsedUser);
-                }
+                setEmailVerified(user.emailVerified || false);
+                calculateProfileCompletion(user);
             }
             setLoading(false);
         };
 
         loadUserData();
-    }, []);
+    }, [user, updateUser]);
 
     const calculateProfileCompletion = (userData) => {
         let completedFields = 0;
@@ -69,8 +69,7 @@ const Dashboard = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('firebaseToken');
-        localStorage.removeItem('userData');
+        logout();
         navigate('/login');
     };
 
@@ -124,36 +123,6 @@ const Dashboard = () => {
                         <p className="error-text">Unable to load profile. Please try logging in again.</p>
                     )}
                 </div>
-
-                {!emailVerified && (
-                    <div className="email-verification-section">
-                        <div className="verification-banner">
-                            <div className="verification-content">
-                                <h3>Email Verification Required</h3>
-                                <p>
-                                    Please verify your email address to secure your account and enable password recovery.
-                                </p>
-                                {verificationMessage && (
-                                    <div className="success-message">
-                                        ✓ {verificationMessage}
-                                    </div>
-                                )}
-                                {verificationError && (
-                                    <div className="error-message">
-                                        ✗ {verificationError}
-                                    </div>
-                                )}
-                                <button
-                                    className="btn-verify-email"
-                                    onClick={handleSendVerificationEmail}
-                                    disabled={verificationLoading}
-                                >
-                                    {verificationLoading ? 'Sending...' : 'Verify Email'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 <AddExpense />
             </div>

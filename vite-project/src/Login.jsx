@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -7,6 +8,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const isFormValid = email && password;
 
@@ -43,16 +45,17 @@ const Login = () => {
       }
 
       console.log('User has successfully logged in', data);
-      localStorage.setItem('firebaseToken', data.idToken);
 
-      // Store user data in localStorage
+      // Store user data and token in auth context
       const userData = {
         email: data.email,
         userId: data.localId,
         fullName: data.displayName || '',
         profilePhotoUrl: data.photoUrl || '',
       };
-      localStorage.setItem('userData', JSON.stringify(userData));
+
+      // Dispatch login action to AuthContext
+      login(userData, data.idToken, data.localId);
 
       navigate('/dashboard');
 

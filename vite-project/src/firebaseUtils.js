@@ -179,12 +179,12 @@ export const sendPasswordResetEmail = async (email) => {
 // Realtime Database helpers
 const FIREBASE_DB_URL = import.meta.env.VITE_FIREBASE_DB_URL || 'https://authentication-app-d8725-default-rtdb.asia-southeast1.firebasedatabase.app';
 
-export const addExpenseToFirebase = async (userId, expense) => {
+export const addExpenseToFirebase = async (userId, expense, token) => {
     try {
-        const token = localStorage.getItem('firebaseToken');
-        if (!userId || !token) throw new Error('Not authenticated');
+        const bearerToken = token || localStorage.getItem('firebaseToken');
+        if (!userId || !bearerToken) throw new Error('Not authenticated');
 
-        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${token}`;
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${bearerToken}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -204,12 +204,12 @@ export const addExpenseToFirebase = async (userId, expense) => {
     }
 };
 
-export const fetchExpensesFromFirebase = async (userId) => {
+export const fetchExpensesFromFirebase = async (userId, token) => {
     try {
-        const token = localStorage.getItem('firebaseToken');
-        if (!userId || !token) return [];
+        const bearerToken = token || localStorage.getItem('firebaseToken');
+        if (!userId || !bearerToken) return [];
 
-        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${token}`;
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}.json?auth=${bearerToken}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -231,12 +231,12 @@ export const fetchExpensesFromFirebase = async (userId) => {
     }
 };
 
-export const deleteExpenseFromFirebase = async (userId, expenseId) => {
+export const deleteExpenseFromFirebase = async (userId, expenseId, token) => {
     try {
-        const token = localStorage.getItem('firebaseToken');
-        if (!userId || !token) throw new Error('Not authenticated');
+        const bearerToken = token || localStorage.getItem('firebaseToken');
+        if (!userId || !bearerToken) throw new Error('Not authenticated');
 
-        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${token}`;
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${bearerToken}`;
         const response = await fetch(url, { method: 'DELETE' });
         if (!response.ok) {
             const data = await response.json();
@@ -251,12 +251,12 @@ export const deleteExpenseFromFirebase = async (userId, expenseId) => {
     }
 };
 
-export const updateExpenseInFirebase = async (userId, expenseId, updatedExpense) => {
+export const updateExpenseInFirebase = async (userId, expenseId, updatedExpense, token) => {
     try {
-        const token = localStorage.getItem('firebaseToken');
-        if (!userId || !token) throw new Error('Not authenticated');
+        const bearerToken = token || localStorage.getItem('firebaseToken');
+        if (!userId || !bearerToken) throw new Error('Not authenticated');
 
-        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${token}`;
+        const url = `${FIREBASE_DB_URL}/expenses/${userId}/${expenseId}.json?auth=${bearerToken}`;
         const response = await fetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

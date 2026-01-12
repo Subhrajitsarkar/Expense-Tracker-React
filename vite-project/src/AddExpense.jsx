@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase, updateExpenseInFirebase } from './firebaseUtils';
+import { useAuth } from './context/AuthContext';
+import { useExpense } from './context/ExpenseContext';
 
 const AddExpense = () => {
+    const { token, userId } = useAuth();
+    const { expenses, totalAmount, addExpense, updateExpense, deleteExpense, setExpenses } = useExpense();
+
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('Food');
-    const [expenses, setExpenses] = useState([]);
     const [error, setError] = useState('');
     const [fetchLoading, setFetchLoading] = useState(false);
     const [addLoading, setAddLoading] = useState(false);
@@ -33,34 +37,35 @@ const AddExpense = () => {
         const load = async () => {
             setFetchLoading(true);
             try {
-                const userDataRaw = localStorage.getItem('userData');
-                const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
-                if (!userData || !userData.userId) {
+                if (!userId) {
                     // No user id available, fallback to localStorage key
                     const savedExpenses = localStorage.getItem('userExpenses');
                     if (savedExpenses) {
                         setExpenses(JSON.parse(savedExpenses));
                     }
+                    setFetchLoading(false);
                     return;
                 }
 
-                const items = await fetchExpensesFromFirebase(userData.userId);
+                const items = await fetchExpensesFromFirebase(userId, token);
                 if (items && items.length) {
-                    setExpenses(items.map(it => ({
+                    const normalizedExpenses = items.map(it => ({
                         ...it,
                         // ensure numeric amount
                         amount: typeof it.amount === 'number' ? it.amount : parseFloat(it.amount || 0)
-                    })));
+                    }));
+                    setExpenses(normalizedExpenses);
                 }
             } catch (err) {
                 console.error('Failed to load expenses:', err);
+                setError('Failed to load expenses');
             } finally {
                 setFetchLoading(false);
             }
         };
 
         load();
-    }, []);
+    }, [userId, token, setExpenses]);
 
     const isFormValid = amount && description.trim() && category;
 
@@ -89,17 +94,14 @@ const AddExpense = () => {
 
         setAddLoading(true);
         try {
-            const userDataRaw = localStorage.getItem('userData');
-            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
-
-            if (userData && userData.userId) {
-                const saved = await addExpenseToFirebase(userData.userId, newExpense);
-                setExpenses(prev => [saved, ...prev]);
+            if (userId) {
+                const saved = await addExpenseToFirebase(userId, newExpense, token);
+                addExpense(saved);
             } else {
                 // fallback to localStorage if not authenticated
                 const temp = { id: Date.now().toString(), ...newExpense };
+                addExpense(temp);
                 const updatedExpenses = [temp, ...expenses];
-                setExpenses(updatedExpenses);
                 localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
             }
 
@@ -117,16 +119,13 @@ const AddExpense = () => {
 
     const handleDeleteExpense = async (id) => {
         try {
-            const userDataRaw = localStorage.getItem('userData');
-            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
-
-            if (userData && userData.userId && id) {
-                await deleteExpenseFromFirebase(userData.userId, id);
+            if (userId && id) {
+                await deleteExpenseFromFirebase(userId, id, token);
             }
 
-            const updatedExpenses = expenses.filter(expense => expense.id !== id);
-            setExpenses(updatedExpenses);
+            deleteExpense(id);
             // keep localStorage in sync
+            const updatedExpenses = expenses.filter(exp => exp.id !== id);
             localStorage.setItem('userExpenses', JSON.stringify(updatedExpenses));
         } catch (err) {
             console.error('Failed to delete expense:', err);
@@ -155,7 +154,7 @@ const AddExpense = () => {
             return;
         }
 
-        const updatedExpense = {
+        const updatedExpenseData = {
             amount: parseFloat(editAmount),
             description: editDescription.trim(),
             category: editCategory,
@@ -166,18 +165,9 @@ const AddExpense = () => {
 
         setEditLoading(true);
         try {
-            const userDataRaw = localStorage.getItem('userData');
-            const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
-
-            if (userData && userData.userId && editingId) {
-                await updateExpenseInFirebase(userData.userId, editingId, updatedExpense);
-
-                // Update the expense in the list
-                setExpenses(prev =>
-                    prev.map(exp =>
-                        exp.id === editingId ? { id: editingId, ...updatedExpense } : exp
-                    )
-                );
+            if (userId && editingId) {
+                await updateExpenseInFirebase(userId, editingId, updatedExpenseData, token);
+                updateExpense(editingId, updatedExpenseData);
             }
 
             // Close edit modal
@@ -202,7 +192,7 @@ const AddExpense = () => {
     };
 
     const getTotalExpenses = () => {
-        return expenses.reduce((total, expense) => total + expense.amount, 0).toFixed(2);
+        return totalAmount.toFixed(2);
     };
 
     const getCategoryTotal = (categoryName) => {
@@ -287,6 +277,27 @@ const AddExpense = () => {
                                 <span className="stat-value">{expenses.length}</span>
                             </div>
                         </div>
+
+                        {totalAmount > 10000 && (
+                            <div className="premium-section">
+                                <div className="premium-banner">
+                                    <span className="premium-icon">👑</span>
+                                    <div className="premium-content">
+                                        <h4>Unlock Premium Features</h4>
+                                        <p>Your total expenses exceed ₹10,000. Activate premium to get:</p>
+                                        <ul className="premium-features">
+                                            <li>Advanced spending analytics</li>
+                                            <li>Budget alerts and notifications</li>
+                                            <li>Export expense reports</li>
+                                            <li>Multi-currency support</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <button className="btn-activate-premium">
+                                    Activate Premium
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="expenses-list-container">
