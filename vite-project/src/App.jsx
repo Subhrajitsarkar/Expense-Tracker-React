@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ExpenseProvider } from './context/ExpenseContext';
+import { ThemeProvider } from './context/ThemeContext';
 import SignUp from './SignUp';
 import Login from './Login';
 import ForgotPassword from './ForgotPassword';
@@ -29,17 +30,19 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ExpenseProvider>
-        <BrowserRouter>
-          <div className="App">
-            <main>
-              <AppRoutes />
-            </main>
-          </div>
-        </BrowserRouter>
-      </ExpenseProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ExpenseProvider>
+          <BrowserRouter>
+            <div className="App">
+              <main>
+                <AppRoutes />
+              </main>
+            </div>
+          </BrowserRouter>
+        </ExpenseProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

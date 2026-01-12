@@ -1201,3 +1201,301 @@ main {
     font-size: 0.9rem;
   }
 }
+
+/* Dark Theme Styles */
+:root[data-theme='light'] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f0f1f3;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+  --header-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3a3a3a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --border-color: #444444;
+  --header-bg: #252525;
+  --card-bg: #2d2d2d;
+  --input-bg: #3a3a3a;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Light Theme (Default) */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.App {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.header {
+  background-color: var(--header-bg);
+  color: var(--text-primary);
+}
+
+.form-card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.dashboard-container {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dashboard-header {
+  background-color: var(--header-bg);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.profile-section,
+.email-verification-section {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.verification-banner {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.expenses-section {
+  color: var(--text-primary);
+}
+
+.add-expense-container {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.expense-form input,
+.expense-form select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.expense-form label {
+  color: var(--text-primary);
+}
+
+.expenses-display-container {
+  color: var(--text-primary);
+}
+
+.expenses-summary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.stat-box {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.premium-section {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--card-bg) 100%);
+  border: 2px solid #ffd700;
+  color: var(--text-primary);
+}
+
+.premium-banner {
+  color: var(--text-primary);
+}
+
+.expenses-list-container {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.expense-item {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.category-breakdown {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.category-item {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.edit-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.edit-modal {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.edit-modal input,
+.edit-modal select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.error-message,
+.success-message {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* Theme Toggle Button Styles */
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-theme-toggle {
+  background: none;
+  border: 2px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+.btn-theme-toggle:hover {
+  background-color: var(--bg-tertiary);
+  transform: scale(1.1);
+}
+
+/* Download CSV Button */
+.btn-download-csv {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-download-csv:hover {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-download-csv:active {
+  transform: translateY(0);
+}
+
+/* Premium Actions Container */
+.premium-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.premium-actions button {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Adjust header-top for dark theme */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Button styles for dark theme */
+.btn-logout,
+.btn-verify-email,
+.btn-complete-profile,
+.btn-activate-premium {
+  background: linear-gradient(135deg, #0088ff 0%, #0066cc 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-logout:hover,
+.btn-verify-email:hover,
+.btn-complete-profile:hover,
+.btn-activate-premium:hover {
+  background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Ensure inputs are visible in dark mode */
+:root[data-theme='dark'] input:focus,
+:root[data-theme='dark'] select:focus,
+:root[data-theme='dark'] textarea:focus {
+  outline: none;
+  border-color: #0088ff;
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.2);
+}
+
+:root[data-theme='light'] input:focus,
+:root[data-theme='light'] select:focus,
+:root[data-theme='light'] textarea:focus {
+  outline: none;
+  border-color: #0088ff;
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.2);
+}

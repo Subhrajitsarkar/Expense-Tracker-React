@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserDataFromFirebase, sendVerificationEmail } from './firebaseUtils';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import AddExpense from './AddExpense';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user, logout, updateUser } = useAuth();
+    const { toggleTheme, theme } = useTheme();
     const [profileCompletion, setProfileCompletion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [emailVerified, setEmailVerified] = useState(false);
@@ -78,9 +80,18 @@ const Dashboard = () => {
             <div className="dashboard-header">
                 <div className="header-top">
                     <h1>Welcome to Expense Tracker!!!</h1>
-                    <button className="btn-logout" onClick={handleLogout}>
-                        Logout
-                    </button>
+                    <div className="header-buttons">
+                        <button
+                            className="btn-theme-toggle"
+                            onClick={toggleTheme}
+                            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+                        >
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+                        <button className="btn-logout" onClick={handleLogout}>
+                            Logout
+                        </button>
+                    </div>
                 </div>
                 {profileCompletion < 100 && (
                     <div className="profile-incomplete-banner">

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase, updateExpenseInFirebase } from './firebaseUtils';
 import { useAuth } from './context/AuthContext';
 import { useExpense } from './context/ExpenseContext';
+import { exportExpensesAsCSV } from './utils/exportUtils';
 
 const AddExpense = () => {
     const { token, userId } = useAuth();
     const { expenses, totalAmount, addExpense, updateExpense, deleteExpense, setExpenses } = useExpense();
+    const [isPremiumActive, setIsPremiumActive] = useState(false);
 
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
@@ -202,6 +204,16 @@ const AddExpense = () => {
             .toFixed(2);
     };
 
+    const handleActivatePremium = () => {
+        setIsPremiumActive(true);
+        alert('🎉 Premium activated! You now have access to all premium features!');
+    };
+
+    const handleDownloadCSV = () => {
+        const fileName = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+        exportExpensesAsCSV(expenses, fileName);
+    };
+
     return (
         <div className="expenses-section">
             <div className="add-expense-container">
@@ -293,10 +305,33 @@ const AddExpense = () => {
                                         </ul>
                                     </div>
                                 </div>
-                                <button className="btn-activate-premium">
-                                    Activate Premium
-                                </button>
+                                <div className="premium-actions">
+                                    <button
+                                        className="btn-activate-premium"
+                                        onClick={handleActivatePremium}
+                                    >
+                                        Activate Premium
+                                    </button>
+                                    <button
+                                        className="btn-download-csv"
+                                        onClick={handleDownloadCSV}
+                                        title="Download all expenses as CSV"
+                                    >
+                                        📥 Download CSV
+                                    </button>
+                                </div>
                             </div>
+                        )}
+
+                        {expenses.length > 0 && totalAmount <= 10000 && (
+                            <button
+                                className="btn-download-csv"
+                                onClick={handleDownloadCSV}
+                                title="Download all expenses as CSV"
+                                style={{ marginTop: '1.5rem', width: '100%' }}
+                            >
+                                📥 Download CSV
+                            </button>
                         )}
                     </div>
 
