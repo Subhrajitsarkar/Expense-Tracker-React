@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
-import { ThemeProvider } from '../context/ThemeContext';
 import { ExpenseProvider } from '../context/ExpenseContext';
 import Dashboard from '../Dashboard';
 
@@ -31,13 +30,11 @@ Object.defineProperty(window, 'matchMedia', {
 const renderWithProviders = (component) => {
     return render(
         <BrowserRouter>
-            <ThemeProvider>
-                <AuthProvider>
-                    <ExpenseProvider>
-                        {component}
-                    </ExpenseProvider>
-                </AuthProvider>
-            </ThemeProvider>
+            <AuthProvider>
+                <ExpenseProvider>
+                    {component}
+                </ExpenseProvider>
+            </AuthProvider>
         </BrowserRouter>
     );
 };
@@ -63,16 +60,6 @@ describe('Dashboard Component Tests', () => {
         await waitFor(() => {
             expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
         });
-    });
-
-    // Test 8: Theme toggle button is present
-    it('should display theme toggle button', async () => {
-        renderWithProviders(<Dashboard />);
-
-        await waitFor(() => {
-            const buttons = screen.getAllByRole('button');
-            expect(buttons.length).toBeGreaterThan(0);
-        }, { timeout: 3000 });
     });
 
     // Test 9: Dashboard displays profile completion status

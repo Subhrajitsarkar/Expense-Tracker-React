@@ -23,7 +23,7 @@ const ProfileCompletion = () => {
                 setProfilePhotoUrl(firebaseUser.profilePhotoUrl || '');
             } else {
                 // Fallback to localStorage if Firebase fetch fails
-                const userData = localStorage.getItem('userData');
+                const userData = localStorage.getItem('user');
                 if (userData) {
                     const parsedUser = JSON.parse(userData);
                     setUser(parsedUser);
@@ -51,7 +51,7 @@ const ProfileCompletion = () => {
 
         try {
             const token = localStorage.getItem('firebaseToken');
-            const userData = JSON.parse(localStorage.getItem('userData'));
+            const userData = JSON.parse(localStorage.getItem('user'));
 
             // Update user data in localStorage
             const updatedUserData = {
@@ -87,7 +87,7 @@ const ProfileCompletion = () => {
             }
 
             // Update localStorage with new user data
-            localStorage.setItem('userData', JSON.stringify(updatedUserData));
+            localStorage.setItem('user', JSON.stringify(updatedUserData));
 
             setSuccess('Profile updated successfully!');
 

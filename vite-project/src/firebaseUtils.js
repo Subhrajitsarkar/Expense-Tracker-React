@@ -43,7 +43,7 @@ export const fetchUserDataFromFirebase = async () => {
             };
 
             // Update localStorage with fresh data from Firebase
-            localStorage.setItem('userData', JSON.stringify(userData));
+            localStorage.setItem('user', JSON.stringify(userData));
 
             return userData;
         }
@@ -275,4 +275,3 @@ export const updateExpenseInFirebase = async (userId, expenseId, updatedExpense,
         throw err;
     }
 };
-

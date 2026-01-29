@@ -1,9 +1,9 @@
-// The user needs to install react-router-dom by running: npm install react-router-dom
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Provider, useDispatch } from 'react-redux';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ExpenseProvider } from './context/ExpenseContext';
-import { ThemeProvider } from './context/ThemeContext';
+import store from './store/index';
+import { useAuth } from './hooks/useRedux';
+import { restoreSession } from './store/slices/authSlice';
 import SignUp from './SignUp';
 import Login from './Login';
 import ForgotPassword from './ForgotPassword';
@@ -28,21 +28,47 @@ function AppRoutes() {
   );
 }
 
+function AppInitializer({ children }) {
+  const dispatch = useDispatch();
+
+  //This runs once immediately when the app loads.
+  useEffect(() => {
+    const token = localStorage.getItem('firebaseToken');
+    const userData = localStorage.getItem('user');
+
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        dispatch(restoreSession({
+          isAuthenticated: true,
+          user,
+          token,
+          userId: user.userId,
+        }));
+      } catch (err) {
+        console.error('Failed to restore session:', err);
+        localStorage.removeItem('firebaseToken');
+        localStorage.removeItem('user');
+      }
+    }
+  }, [dispatch]);
+
+  return children;
+}
+
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ExpenseProvider>
-          <BrowserRouter>
-            <div className="App">
-              <main>
-                <AppRoutes />
-              </main>
-            </div>
-          </BrowserRouter>
-        </ExpenseProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Provider store={store}>
+      <AppInitializer>
+        <BrowserRouter>
+          <div className="App">
+            <main>
+              <AppRoutes />
+            </main>
+          </div>
+        </BrowserRouter>
+      </AppInitializer>
+    </Provider>
   );
 }
 

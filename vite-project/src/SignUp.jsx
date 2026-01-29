@@ -41,7 +41,7 @@ const SignUp = () => {
         },
       });
 
-      const data = await response.json();
+      const data = await response.json();   //raw text converts to JSON obj
 
       if (!response.ok) {
         const errorMessage = data.error?.message || 'An unknown error occurred.';
@@ -57,7 +57,7 @@ const SignUp = () => {
         fullName: '',
         profilePhotoUrl: '',
       };
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('firebaseToken', data.idToken);
 
       alert('Successfully signed up!');

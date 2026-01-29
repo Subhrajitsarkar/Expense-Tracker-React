@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { addExpenseToFirebase, fetchExpensesFromFirebase, deleteExpenseFromFirebase, updateExpenseInFirebase } from './firebaseUtils';
-import { useAuth } from './context/AuthContext';
-import { useExpense } from './context/ExpenseContext';
+import { useAuth, useExpense } from './hooks/useRedux';
 import { exportExpensesAsCSV } from './utils/exportUtils';
 
 const AddExpense = () => {

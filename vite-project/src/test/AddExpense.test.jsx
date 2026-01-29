@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
-import { ThemeProvider } from '../context/ThemeContext';
 import { ExpenseProvider } from '../context/ExpenseContext';
 import AddExpense from '../AddExpense';
 
@@ -59,13 +58,11 @@ Object.defineProperty(window, 'localStorage', {
 const renderWithProviders = (component) => {
     return render(
         <BrowserRouter>
-            <ThemeProvider>
-                <AuthProvider>
-                    <ExpenseProvider>
-                        {component}
-                    </ExpenseProvider>
-                </AuthProvider>
-            </ThemeProvider>
+            <AuthProvider>
+                <ExpenseProvider>
+                    {component}
+                </ExpenseProvider>
+            </AuthProvider>
         </BrowserRouter>
     );
 };
